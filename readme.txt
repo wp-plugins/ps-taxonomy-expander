@@ -2,8 +2,8 @@
 Contributors: jim912
 Tags: category, tag, taxonomy, custom taxonomy
 Requires at least: 3.0
-Tested up to: 3.1.2
-Stable tag: 1.0.0
+Tested up to: 3.1.3
+Stable tag: 1.0.1
 
 Makes categories, tags and custom taxonomies more useful.
 
@@ -28,6 +28,9 @@ PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on
 
 
 == Changelog ==
+= 1.0.1 =
+* Fixed Media taxonomy Bug
+
 = 1.0.0 =
 * Fixed notice and warning errors.
 * Fixed single and plural.
