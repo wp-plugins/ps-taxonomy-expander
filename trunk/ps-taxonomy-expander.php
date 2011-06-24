@@ -4,7 +4,7 @@ Plugin Name: PS Taxonomy Expander
 Plugin URI: http://www.warna.info/archives/451/
 Description: PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on editing posts.
 Author: Hitoshi Omagari
-Version: 1.0.0
+Version: 1.0.1
 
 */
 
@@ -32,9 +32,11 @@ function __construct() {
 		add_action( 'admin_menu'						, array( &$this, 'add_media_taxonomy_menu' ) );
 		add_filter( 'attachment_fields_to_edit'			, array( &$this, 'replace_attachement_taxonomy_input_to_check' ), 100, 2 );
 		add_action( 'load-media.php'					, array( &$this, 'join_media_taxonomy_datas' ) );
+		add_action( 'load-media-upload.php'				, array( &$this, 'join_media_taxonomy_datas' ) );
 		add_action( 'right_now_content_table_end'		, array( &$this, 'display_taxonomy_post_count' ) );
 		add_action( 'personal_options'					, array( &$this, 'add_taxonomy_count_dashboard_right_now_field' ) );
 		add_action( 'profile_update'					, array( &$this, 'update_taxonomy_count_dashboard_right_now' ), 10, 2 );
+//		add_action( 'admin_menu'						, array( &$this, 'add_taxonomy_order_menu' ) );
 	}
 	add_action( 'wp_insert_post'	, array( &$this, 'add_post_type_default_term' ), 10, 2 );
 	add_action( 'add_attachment'	, array( &$this, 'add_post_type_default_term' ) );
@@ -358,6 +360,7 @@ function replace_attachement_taxonomy_input_to_check( $form_fields, $post ) {
 function walker_media_taxonomy_html( $post_id, $taxonomy,  $term_id_arr, $taxonomy_tree, $html = '', $cnt = 0 ) {
 	$single_taxonomies = get_option( 'single_taxonomies' );
 	foreach ( $taxonomy_tree as $term_id => $arr ) {
+
 		$checked = is_object_in_term( $post_id, $taxonomy, $term_id ) ? ' checked="checked"' : '';
 		$type = in_array( $taxonomy, $single_taxonomies ) ? 'radio' : 'checkbox';
 		$html .= str_repeat( '—', count( get_ancestors( $term_id, $taxonomy ) ) );
@@ -373,9 +376,10 @@ function walker_media_taxonomy_html( $post_id, $taxonomy,  $term_id_arr, $taxono
 
 function join_media_taxonomy_datas() {
 	global $wp_taxonomies;
- 
-	if ( ! isset( $_POST['action'] ) || $_POST['action'] != 'editattachment' ) { return; }
-	$attachment_id = (int)$_POST['attachment_id'];
+
+	if ( ! isset( $_POST['attachments'] ) ) { return; }
+	check_admin_referer('media-form');
+
 	$media_taxonomies = array();
 	if ( $wp_taxonomies ) {
 		foreach ( $wp_taxonomies as $key => $obj ) {
@@ -387,12 +391,14 @@ function join_media_taxonomy_datas() {
 
 	if ( $media_taxonomies ) {
 		foreach ( $media_taxonomies as $key => $media_taxonomy ) {
-			if ( isset( $_POST['attachments'][$attachment_id][$key] ) ) {
-				if ( is_array( $_POST['attachments'][$attachment_id][$key] ) ) {
-					$_POST['attachments'][$attachment_id][$key] = implode( ', ', $_POST['attachments'][$attachment_id][$key] );
-				}
-			} else {
+			foreach ( $_POST['attachments'] as $attachment_id => $post_val ) {
+				if ( isset( $_POST['attachments'][$attachment_id][$key] ) ) {
+					if ( is_array( $_POST['attachments'][$attachment_id][$key] ) ) {
+						$_POST['attachments'][$attachment_id][$key] = implode( ', ', $_POST['attachments'][$attachment_id][$key] );
+					}
+				} else {
 					$_POST['attachments'][$attachment_id][$key] = '';
+				}
 			}
 		}
 	}
@@ -456,6 +462,28 @@ function update_taxonomy_count_dashboard_right_now( $user_id, $old_user_data ) {
 	}
 }
 
+
+function add_taxonomy_order_menu() {
+	$taxonomies = get_taxonomies( array( 'public' => true, 'hierarchical' => true, 'show_ui' => true, '_builtin' => false ), false );
+	$post_types = get_post_types( array( 'public' => true, 'show_ui' => true ), false );
+	$matched = array();
+	foreach ( $post_types as $post_slug => $post_type ) {
+		foreach ( $taxonomies as $tax_slug => $taxonomy ) {
+			if ( in_array( $tax_slug, $matched ) ) { continue; }
+			if ( in_array( $post_slug, $taxonomy->object_type ) ) {
+				$matched[] = $tax_slug;
+//				var_dump( $taxonomy );
+				add_submenu_page( 'edit.php?post_type=' . $post_slug, $taxonomy->labels->name . ' Order', $taxonomy->labels->name . ' Order', $taxonomy->cap->edit_terms, basename( __FILE__ ) , array( &$this, 'taxonomy_order_page' ), array( $tax_slug ) );
+			}
+		}
+	}
+
+}
+
+
+function taxonomy_order_page( $taxonomy ) {
+
+}
 
 } // class end
 $ps_taxonomy_expander = new PS_Taxonomy_Expander();
