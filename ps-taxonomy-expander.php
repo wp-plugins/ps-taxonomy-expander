@@ -4,8 +4,10 @@ Plugin Name: PS Taxonomy Expander
 Plugin URI: http://www.warna.info/archives/451/
 Description: PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on editing posts.
 Author: Hitoshi Omagari
-Version: 1.0.1
-
+Version: 1.1.0
+License: GPLv2 or later
+Text Domain: ps-taxonomy-expander
+Domain Path: /languages/
 */
 
 
@@ -36,7 +38,9 @@ function __construct() {
 		add_action( 'right_now_content_table_end'		, array( &$this, 'display_taxonomy_post_count' ) );
 		add_action( 'personal_options'					, array( &$this, 'add_taxonomy_count_dashboard_right_now_field' ) );
 		add_action( 'profile_update'					, array( &$this, 'update_taxonomy_count_dashboard_right_now' ), 10, 2 );
-//		add_action( 'admin_menu'						, array( &$this, 'add_taxonomy_order_menu' ) );
+		add_action( 'admin_menu'						, array( &$this, 'add_taxonomy_order_menu' ) );
+		add_action( 'admin_init'						, array( &$this, 'add_jquery_sortable' ) );
+		add_filter('plugin_action_links'				, array( &$this, 'plugin_term_order_links' ), 10, 2 );
 	}
 	add_action( 'wp_insert_post'	, array( &$this, 'add_post_type_default_term' ), 10, 2 );
 	add_action( 'add_attachment'	, array( &$this, 'add_post_type_default_term' ) );
@@ -464,25 +468,208 @@ function update_taxonomy_count_dashboard_right_now( $user_id, $old_user_data ) {
 
 
 function add_taxonomy_order_menu() {
-	$taxonomies = get_taxonomies( array( 'public' => true, 'hierarchical' => true, 'show_ui' => true, '_builtin' => false ), false );
-	$post_types = get_post_types( array( 'public' => true, 'show_ui' => true ), false );
-	$matched = array();
-	foreach ( $post_types as $post_slug => $post_type ) {
-		foreach ( $taxonomies as $tax_slug => $taxonomy ) {
-			if ( in_array( $tax_slug, $matched ) ) { continue; }
-			if ( in_array( $post_slug, $taxonomy->object_type ) ) {
-				$matched[] = $tax_slug;
-//				var_dump( $taxonomy );
-				add_submenu_page( 'edit.php?post_type=' . $post_slug, $taxonomy->labels->name . ' Order', $taxonomy->labels->name . ' Order', $taxonomy->cap->edit_terms, basename( __FILE__ ) , array( &$this, 'taxonomy_order_page' ), array( $tax_slug ) );
-			}
-		}
-	}
-
+	$hook = add_options_page( __( 'Term order', 'ps-taxonomy-expander' ), __( 'Term order', 'ps-taxonomy-expander' ), 'manage_categories', basename( __FILE__ ), array( &$this, 'term_order_page' ) );
+	add_action( 'admin_print_styles-' . $hook, array( &$this, 'term_order_style' ) );
+	add_action( 'admin_print_scripts-' . $hook, array( &$this, 'term_order_scripts' ) );
 }
 
 
-function taxonomy_order_page( $taxonomy ) {
+function plugin_term_order_links( $links, $file ) {
+	$this_plugin = plugin_basename(__FILE__);
+	if ( $file == $this_plugin ) {
+		$link = trailingslashit( get_bloginfo( 'wpurl' ) ) . 'wp-admin/options-general.php?page=' . basename( __FILE__ ); 
+		$term_order_link = '<a href="' . $link . '">' . __( 'Term order', 'ps-taxonomy-expander' ) . '</a>';
+		array_unshift( $links, $term_order_link ); // before other links
+		$link = trailingslashit( get_bloginfo( 'wpurl' ) ) . 'wp-admin/options-writing.php';
+		$tax_regist_link = '<a href="' . $link . '">' . __( 'Option to register taxonomies', 'ps-taxonomy-expander' ) . '</a>';
+		array_unshift( $links, $tax_regist_link ); // before other links
+	}
+	return $links;
+}
 
+
+function term_order_page( $taxonomy ) {
+	global $wpdb;
+
+	$check = $wpdb->query( "SHOW COLUMNS FROM $wpdb->terms LIKE 'term_order'" );
+	if ( $check == 0 ) {
+		$wpdb->query( "ALTER TABLE $wpdb->terms ADD `term_order` INT( 4 ) NULL DEFAULT '0'" );
+	}
+	
+	$update_message = '';
+	if ( isset( $_POST['term_order_update'] ) && $_POST['term_order_update'] ) {
+		check_admin_referer( 'term_order' );
+		$post_data = stripslashes_deep( $_POST );
+		$tax_order = explode( ',', $post_data['term_order'] );
+		if ( ! empty( $tax_order ) ) {
+			$order = 0;
+			$affected = 0;
+			foreach ( $tax_order as $tax_id ) {
+				$affected += $wpdb->update( $wpdb->terms, array( 'term_order' => $order ), array( 'term_id' => $tax_id ) );
+				$order++;
+			}
+
+			if ( $affected == 0 ) {
+				$update_message =  '<div id="message" class="updated fade"><p>'. __( 'Non Updated', 'ps-taxonomy-expander' ).'</p></div>';
+			} else {
+				$update_message =  '<div id="message" class="updated fade"><p>'. __( 'Updated successfully.', 'ps-taxonomy-expander' ).'</p></div>';
+			}
+		}
+	}
+	
+	$taxonomies = get_taxonomies( array( 'public' => true, 'hierarchical' => true, 'show_ui' => true ), false );
+
+	if ( isset( $_GET['taxonomy'] ) && taxonomy_exists( $_GET['taxonomy'] ) ) {
+		$this->current_taxonomy = get_taxonomy( $_GET['taxonomy'] );
+	} else {
+		$this->current_taxonomy = get_taxonomy( 'category' );
+	}
+	$parent = isset( $_GET['parent'] ) ? (int)$_GET['parent'] : 0;
+	if ( $parent ) {
+		$parent_term = get_term( $parent, $this->current_taxonomy->name );
+	}
+	$have_children = $wpdb->get_results( "SELECT t.term_id, t.name FROM $wpdb->term_taxonomy tt, $wpdb->terms t, $wpdb->term_taxonomy tt2 WHERE tt.parent = $parent AND tt.taxonomy = '{$this->current_taxonomy->name}' AND t.term_id = tt.term_id AND tt2.parent = tt.term_id GROUP BY t.term_id, t.name HAVING COUNT(*) > 0 ORDER BY t.term_order ASC" );
+
+?>
+<div class="wrap">
+	<?php screen_icon( 'term-order' ); ?>
+	<h2><?php _e( 'Term order', 'ps-taxonomy-expander' ); ?></h2>
+		<ul id="taxonomies_tab">
+<?php if ( ! empty( $taxonomies ) ) : foreach ( $taxonomies as $tax_slug => $taxonomy ) :
+	$link = $tax_slug == 'category' ? remove_query_arg( array( 'taxonomy', 'parent' ) ) : add_query_arg( array( 'taxonomy' => $tax_slug ), remove_query_arg( 'parent' ) );
+	if ( $this->current_taxonomy->name == $tax_slug ) :
+?>
+			<li><strong><?php echo esc_html( $taxonomy->label ); ?></strong></li>
+<?php else : ?>
+			<li><a href="<?php echo esc_url( $link ); ?>"><?php echo esc_html( $taxonomy->label ); ?></a></li>
+<?php endif; ?>
+<?php endforeach; endif; ?>
+		</ul>
+<?php 
+	echo $update_message;
+	$terms = $wpdb->get_results( "SELECT DISTINCT t.term_id, name FROM $wpdb->term_taxonomy tt inner join $wpdb->terms t on t.term_id = tt.term_id where tt.taxonomy = '{$this->current_taxonomy->name}' AND tt.parent = $parent ORDER BY t.term_order ASC" );
+?>
+	<h3><?php echo esc_html( $this->current_taxonomy->label ); ?></h3>
+<?php if ( ! empty( $have_children ) ) : ?>
+	<h4><?php printf( __( 'Sub %s', 'ps-taxonomy-expander' ), esc_html( $this->current_taxonomy->labels->singular_name ) ); ?></h4>
+	<select id="child_terms">
+<?php foreach ( $have_children as $have_child ) : ?>
+		<option value="<?php echo esc_url( add_query_arg( array( 'parent' => $have_child->term_id ) ) ); ?>"><?php echo esc_html( $have_child->name ); ?></option>
+<?php endforeach; ?>
+	</select>
+	<input type="button" value="<?php printf( __( 'Move to child %s', 'ps-taxonomy-expander' ), esc_attr( $this->current_taxonomy->labels->singular_name ) ) ?>" onClick="locationChildTerms();" />
+<?php endif; ?>
+<?php if ( $parent != 0 ) : ?>
+		<a href="<?php echo esc_url( remove_query_arg( 'parent' ) ); ?>" class="button"><?php printf( __( 'Back to top %s', 'ps-taxonomy-expander' ), esc_html( $this->current_taxonomy->labels->singular_name ) ); ?></a>
+<?php if ( $parent_term->parent ) : ?>
+		<a href="<?php echo esc_url( add_query_arg( array( 'parent' => $parent_term->parent ) ) ); ?>" class="button"><?php printf( __( 'Back to parent %s', 'ps-taxonomy-expander' ), esc_html( $this->current_taxonomy->labels->singular_name ) ); ?></a>
+<?php endif; endif; ?>
+	<h4><?php printf( __( '%s order', 'ps-taxonomy-expander' ), esc_html( $this->current_taxonomy->labels->singular_name ) ); ?></h4>
+	<ul id="term_order_list" style="width: 45%; margin:10px 10px 10px 0px; padding:10px; border:1px solid #B2B2B2; list-style:none;">
+<?php foreach ( $terms as $term ) : ?>
+		<li id="<?php echo esc_attr( $term->term_id ); ?>" class="lineitem"><?php echo esc_html( $term->name ); ?></li>
+<?php endforeach; ?>
+	</ul>
+	<form action="" method="post">
+		<?php wp_nonce_field( 'term_order' ); ?>
+		<input type="hidden" id="term_order" name="term_order" />
+		<input type="hidden" id="term_parent_id" name="term_parent_id" value="<?php echo esc_html( $parent ); ?>" />
+		<input type="submit" name="term_order_update" value="<?php _e( 'Save Changes' ); ?>" onclick="javascript:orderTerm(); return true;" class="button-primary" />
+	</form>
+	<div id="developper_information">
+		<a href="http://www.prime-strategy.co.jp" target="_blank" id="poweredby">
+			<img src="<?php echo esc_url( preg_replace( '/^https?:/', '', plugin_dir_url( __FILE__ ) ) . 'images/ps_logo.png' ) ?>" alt="Powered by Prime Strategy" />
+		</a>
+	</div>
+</div>
+<?php
+}
+
+
+function term_order_style() {
+	$url = preg_replace( '/^https?:/', '', plugin_dir_url( __FILE__ ) ) . 'images/icon32.png';
+?>
+<style type="text/css" charset="utf-8">
+#icon-term-order {
+	background: url( <?php echo esc_url( $url ); ?> ) no-repeat center;
+}
+#developper_information {
+	margin: 20px 30px 10px;
+	text-align: right;
+}
+#developper_information .content {
+	padding: 10px 20px;
+}
+#poweredby {
+
+}
+li.lineitem {
+	margin: 3px 0px;
+	padding: 2px 5px 2px 5px;
+	background-color: #F1F1F1;
+	border:1px solid #B2B2B2;
+	cursor: move;
+}
+#taxonomies_tab {
+	margin-top: 20px;
+	border-bottom: solid 1px #999;
+}
+#taxonomies_tab li {
+	display: inline-block;
+	margin: 0;
+}
+#taxonomies_tab li a,
+#taxonomies_tab li strong {
+	position: relative;
+	bottom: -1px;
+	display: inline-block;
+	border: solid 1px #999;
+	padding: 3px 10px;
+	margin: 0 5px 0 0;
+}
+#taxonomies_tab li strong {
+	border-bottom: solid 1px #fff;
+}
+#taxonomies_tab li a {
+	background: #eee;
+}
+</style>
+<?php
+}
+
+
+function term_order_scripts() {
+?>
+<script language="JavaScript" type="text/javascript">
+	function taxOrderAddLoadEvent(){
+		jQuery("#term_order_list").sortable({ 
+			placeholder: "ui-selected", 
+			revert: false,
+			tolerance: "pointer" 
+		});
+	};
+
+	addLoadEvent( taxOrderAddLoadEvent );
+
+	function orderTerm() {
+		jQuery("#term_order").val(jQuery("#term_order_list").sortable("toArray"));
+	}
+	
+	function locationChildTerms() {
+		var childSelect = document.getElementById( 'child_terms' );
+		document.location.href = childSelect.options[childSelect.selectedIndex].value;
+	}
+</script>
+<?php
+}
+
+
+function add_jquery_sortable() {
+	if ( isset( $_GET['page'] ) && $_GET['page'] == basename( __FILE__ ) ) {
+		wp_enqueue_script('jquery');
+		wp_enqueue_script('jquery-ui-core');
+		wp_enqueue_script('jquery-ui-sortable');
+	}
 }
 
 } // class end

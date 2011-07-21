@@ -2,8 +2,8 @@
 Contributors: jim912
 Tags: category, tag, taxonomy, custom taxonomy
 Requires at least: 3.0
-Tested up to: 3.1.3
-Stable tag: 1.0.1
+Tested up to: 3.2.1
+Stable tag: 1.1.0
 
 Makes categories, tags and custom taxonomies more useful.
 
@@ -16,6 +16,7 @@ PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on
 3. Add custom taxonomies menu on Media.
 4. Enable to select check box / radio button to register taxonomies of media with hierarchy.
 5. Enable to display custom taxonomies on Right Now in the Dashboard, if you check the box on Your Profile.
+5. Enable to set term order on ""
 
 = Usage =
 * You can find settings of default taxonomy and taxonomy selection on Writing Settings.
@@ -28,6 +29,9 @@ PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on
 
 
 == Changelog ==
+= 1.1.0 =
+* Added the function to set term order
+
 = 1.0.1 =
 * Fixed Media taxonomy Bug
 
@@ -45,7 +49,7 @@ PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on
 2. Setting of default taxonomies.
 3. Custom taxonomies menu and registration on Media.
 4. Displaying custom taxonomies on Right Now.
-
+5. Setting of term order.
 
 == Links ==
 "[PS Auto Sitemap](http://wordpress.org/extend/plugins/ps-auto-sitemap/ "WordPress sitemap plugin")" is a plugin automatically generates a site map page from your WordPress site. 
