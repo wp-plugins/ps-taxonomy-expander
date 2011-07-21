@@ -2,8 +2,8 @@
 Contributors: jim912
 Tags: category, tag, taxonomy, custom taxonomy
 Requires at least: 3.0
-Tested up to: 3.1.2
-Stable tag: 1.0.0
+Tested up to: 3.2.1
+Stable tag: 1.1.0
 
 カテゴリー、タグ、カスタム分類の使い勝手を向上させます。
 
@@ -16,10 +16,12 @@ PS Taxonomy Expanderは、カテゴリー・タグ、そしてカスタム分類の記事編集時における
 3. メディアのカスタム分類メニューを追加します。
 4. 階層化されたメディアのタクソノミー登録方法をチェックボックス/ラジオボタンに変更します。
 5. プロフィール設定にて、ダッシュボードの現在の状況にカスタム分類を表示追加させることができます。
+6. タクソノミー毎の順序を指定することができます。
 
 = Usage =
 * 投稿設定ページに、デフォルト分類、登録方法の設定が追加されます。
 * プロフィールページ、現在の状況へのタクソノミー表示設定が追加されます。
+* 設定メニューに、"Term order"メニューが追加されます。
 
 == Installation ==
 
@@ -28,6 +30,10 @@ PS Taxonomy Expanderは、カテゴリー・タグ、そしてカスタム分類の記事編集時における
 
 
 == Changelog ==
+= 1.1.0 =
+* タクソノミーの順序指定機能を追加
+= 1.0.1 =
+* バグフィックス
 = 1.0.0 =
 * メディアタクソノミーがギャラリーで編集・保存できない問題を修正
 
@@ -45,7 +51,7 @@ PS Taxonomy Expanderは、カテゴリー・タグ、そしてカスタム分類の記事編集時における
 2. デフォルト分類設定
 3. メディアのタクソノミーのメニュー表示と登録方法
 4. 現在の状況にカスタム分類の表示
-
+5. タクソノミー順序の設定画面
 
 == Links ==
 "[PS Auto Sitemap](http://wordpress.org/extend/plugins/ps-auto-sitemap/ "WordPress sitemap plugin")" is a plugin automatically generates a site map page from your WordPress site. 
