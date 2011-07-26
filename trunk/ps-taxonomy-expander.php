@@ -4,7 +4,7 @@ Plugin Name: PS Taxonomy Expander
 Plugin URI: http://www.warna.info/archives/451/
 Description: PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on editing posts.
 Author: Hitoshi Omagari
-Version: 1.1.0
+Version: 1.1.1
 License: GPLv2 or later
 Text Domain: ps-taxonomy-expander
 Domain Path: /languages/
@@ -45,6 +45,7 @@ function __construct() {
 	add_action( 'wp_insert_post'	, array( &$this, 'add_post_type_default_term' ), 10, 2 );
 	add_action( 'add_attachment'	, array( &$this, 'add_post_type_default_term' ) );
 	add_action( 'edit_attachment'	, array( &$this, 'add_post_type_default_term' ) );
+	add_filter( 'get_terms_orderby'	, array( &$this, 'term_orderby_order' ), 10, 2 );
 }
 
 
@@ -468,7 +469,7 @@ function update_taxonomy_count_dashboard_right_now( $user_id, $old_user_data ) {
 
 
 function add_taxonomy_order_menu() {
-	$hook = add_options_page( __( 'Term order', 'ps-taxonomy-expander' ), __( 'Term order', 'ps-taxonomy-expander' ), 'manage_categories', basename( __FILE__ ), array( &$this, 'term_order_page' ) );
+	$hook = add_object_page( __( 'Term order', 'ps-taxonomy-expander' ), __( 'Term order', 'ps-taxonomy-expander' ), 'manage_categories', basename( __FILE__ ), array( &$this, 'term_order_page' ) );
 	add_action( 'admin_print_styles-' . $hook, array( &$this, 'term_order_style' ) );
 	add_action( 'admin_print_scripts-' . $hook, array( &$this, 'term_order_scripts' ) );
 }
@@ -477,7 +478,7 @@ function add_taxonomy_order_menu() {
 function plugin_term_order_links( $links, $file ) {
 	$this_plugin = plugin_basename(__FILE__);
 	if ( $file == $this_plugin ) {
-		$link = trailingslashit( get_bloginfo( 'wpurl' ) ) . 'wp-admin/options-general.php?page=' . basename( __FILE__ ); 
+		$link = trailingslashit( get_bloginfo( 'wpurl' ) ) . 'wp-admin/admin.php?page=' . basename( __FILE__ ); 
 		$term_order_link = '<a href="' . $link . '">' . __( 'Term order', 'ps-taxonomy-expander' ) . '</a>';
 		array_unshift( $links, $term_order_link ); // before other links
 		$link = trailingslashit( get_bloginfo( 'wpurl' ) ) . 'wp-admin/options-writing.php';
@@ -670,6 +671,14 @@ function add_jquery_sortable() {
 		wp_enqueue_script('jquery-ui-core');
 		wp_enqueue_script('jquery-ui-sortable');
 	}
+}
+
+
+function term_orderby_order( $orderby, $args ) {
+	if ( strtolower( $args['orderby'] ) == 'order' ) {
+		$orderby = 't.term_order';
+	}
+	return $orderby;
 }
 
 } // class end
