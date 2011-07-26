@@ -3,7 +3,7 @@ Contributors: jim912
 Tags: category, tag, taxonomy, custom taxonomy
 Requires at least: 3.0
 Tested up to: 3.2.1
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 
 Makes categories, tags and custom taxonomies more useful.
 
@@ -29,6 +29,9 @@ PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on
 
 
 == Changelog ==
+= 1.1.1 =
+* Term order menu become independent from Options sub menu.
+
 = 1.1.0 =
 * Added the function to set term order
 
