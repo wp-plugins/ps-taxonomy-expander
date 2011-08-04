@@ -4,7 +4,7 @@
  Plugin URI: http://www.warna.info/archives/451/
  Description: PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on editing posts.
  Author: Hitoshi Omagari
- Version: 1.1.2
+ Version: 1.1.3
  License: GPLv2 or later
  Text Domain: ps-taxonomy-expander
  Domain Path: /language/
@@ -12,6 +12,9 @@
 
 
 class PS_Taxonomy_Expander {
+	var $single_taxonomies;
+	var $edit_post_type;
+	var $disp_taxonomies;
 
 function PS_Taxonomy_Expander() {
 	$this->__construct();
@@ -21,6 +24,7 @@ function PS_Taxonomy_Expander() {
 function __construct() {
 	load_plugin_textdomain( 'ps-taxonomy-expander', false, plugin_basename( dirname( __FILE__ ) ) . '/language' );
 	if ( is_admin() ) {
+		add_action( 'admin_init'						, array( &$this, 'get_plugin_option' ) );
 		add_action( 'admin_print_styles-post-new.php'	, array( &$this, 'add_style_hide_add_category' ) );
 		add_action( 'admin_print_styles-post.php'		, array( &$this, 'add_style_hide_add_category' ) );
 		add_action( 'admin_footer-post.php'				, array( &$this, 'replace_check2radio_taxonomy_scripts' ) );
@@ -57,14 +61,36 @@ function __construct() {
 }
 
 
+function get_plugin_option() {
+	$this->single_taxonomies = get_option( 'single_taxonomies' );
+	if ( ! is_array( $this->single_taxonomies ) ) {
+		$this->single_taxonomies = array();
+	}
+	$post_types = get_post_types( array( 'public' => true, 'show_ui' => true ), false );
+	foreach ( $post_types as $post_slug => $post_type ) {
+		$taxonomies = get_object_taxonomies( $post_slug, 'object' );
+		if ( ! empty( $taxonomies ) ) {
+			foreach ( $taxonomies as $tax_slug => $taxonomy ) {
+				if ( ! in_array( $tax_slug, array( 'category', 'post_tag' ) ) && $taxonomy->show_ui !== false ) {
+					$this->disp_taxonomies[$post_slug] = get_option( $post_slug . '_list_taxonomies' );
+					if ( ! $this->disp_taxonomies[$post_slug] ) {
+						$this->disp_taxonomies[$post_slug] = array();
+					}
+					break;
+				}
+			}
+		}
+	}
+}
+
+
 function replace_check2radio_taxonomy_scripts() {
 	global $post;
-	$single_taxonomies = get_option( 'single_taxonomies' );
 	$taxonomies = get_object_taxonomies( $post->post_type, 'object' );
 
 	if ( $taxonomies ) {
 		foreach ( $taxonomies as $label => $obj ) {
-			if ( $obj->show_ui && $obj->hierarchical && $obj->public && in_array( $obj->name, $single_taxonomies ) ) {
+			if ( $obj->show_ui && $obj->hierarchical && $obj->public && in_array( $obj->name, $this->single_taxonomies ) ) {
 					echo <<< EOF
 <script type="text/javascript">
 	//<![CDATA[
@@ -93,11 +119,10 @@ EOF;
 
 function quick_replace_check2radio_taxonomy_scripts() {
 $post_type = isset( $_GET['post_type'] ) ? $_GET['post_type'] : 'post';
-$single_taxonomies = get_option( 'single_taxonomies' );
 $taxonomies = get_object_taxonomies( $post_type, 'object' );
 if ( $taxonomies ) {
 	foreach ( $taxonomies as $label => $obj ) {
-		if ( $obj->show_ui && $obj->hierarchical && $obj->public && in_array( $obj->name, $single_taxonomies ) ) {
+		if ( $obj->show_ui && $obj->hierarchical && $obj->public && in_array( $obj->name, $this->single_taxonomies ) ) {
 echo <<< EOF
 <script type="text/javascript">
 	//<![CDATA[
@@ -130,15 +155,14 @@ function add_sc_inline_edit_js() {
 function add_style_hide_add_category() {
 	global $post;
 
-	$single_taxonomies = get_option( 'single_taxonomies' );
 	$taxonomies = get_object_taxonomies( $post->post_type, 'object' );
-	if ( $taxonomies && is_array( $single_taxonomies ) ) {
+	if ( $taxonomies && is_array( $this->single_taxonomies ) ) {
 ?>
 <style>
 <!--
 <?php
 foreach  ( $taxonomies as  $label  => $obj  ) {
-	if  ( $obj->show_ui && $obj->hierarchical  && $obj->public  && in_array (  $obj->name, $single_taxonomies ) ) {
+	if  ( $obj->show_ui && $obj->hierarchical  && $obj->public  && in_array (  $obj->name, $this->single_taxonomies ) ) {
 ?>
 #<?php echo esc_html (  $label  ); ?>-adder {
 	display: none;
@@ -202,10 +226,6 @@ function default_term_setting_field( $args ) {
 
 
 function single_taxonomies_filed() {
-	$single_taxonomies = get_option( 'single_taxonomies' );
-	if ( $single_taxonomies === false ) {
-		$single_taxonomies = array();
-	}
 	$taxonomies = get_taxonomies( array( 'hierarchical' => true, 'public' => true, 'show_ui' => true ), false );
 ?>
 
@@ -213,7 +233,7 @@ function single_taxonomies_filed() {
 <ul>
 <?php foreach ( $taxonomies as $key => $obj ) :
 $label = $obj->_builtin ? __( $obj->label ) : $obj->label;
-$checked = $single_taxonomies && in_array( $obj->name, $single_taxonomies ) ? ' checked="checked"' : '';
+$checked = $this->single_taxonomies && in_array( $obj->name, $this->single_taxonomies ) ? ' checked="checked"' : '';
 ?>
 	<li><input type="checkbox" name="single_taxonomies[]"
 		id="single_taxonomies_<?php echo esc_attr( $obj->name ); ?>"
@@ -227,16 +247,16 @@ $checked = $single_taxonomies && in_array( $obj->name, $single_taxonomies ) ? ' 
 
 function check_single_taxonomies_postdata() {
 	$taxonomies = get_taxonomies( array( 'hierarchical' => true, 'public' => true, 'show_ui' => true ) );
-	if ( isset( $POST['single_taxonomies'] ) ) {
-		if ( is_array( $POST['single_taxonomies'] ) ) {
-			foreach ( $POST['single_taxonomies'] as $key => $val ) {
+	if ( isset( $_POST['single_taxonomies'] ) ) {
+		if ( is_array( $_POST['single_taxonomies'] ) ) {
+			foreach ( $_POST['single_taxonomies'] as $key => $val ) {
 				$val = maybe_unserialize( $val );
 				if ( ! in_array( $val, array_keys( $taxonomies ) ) ) {
-					unset( $POST['single_taxonomies'][$key] );
+					unset( $_POST['single_taxonomies'][$key] );
 				}
 			}
 		} else {
-			unset( $POST['single_taxonomies'] );
+			unset( $_POST['single_taxonomies'] );
 		}
 	}
 }
@@ -273,7 +293,6 @@ function add_post_type_default_term( $post_id, $post = null ) {
 	if ( is_null( $post ) ) {
 		$post_id = (int)$post_id;
 		$post = get_post( $post_id );
-
 	}
 
 	if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || $post->post_status == 'auto-draft' || $post->post_type == 'revision' ) { return; }
@@ -374,11 +393,9 @@ function replace_attachement_taxonomy_input_to_check( $form_fields, $post ) {
 
 
 function walker_media_taxonomy_html( $post_id, $taxonomy,  $term_id_arr, $taxonomy_tree, $html = '', $cnt = 0 ) {
-	$single_taxonomies = get_option( 'single_taxonomies' );
 	foreach ( $taxonomy_tree as $term_id => $arr ) {
-
 		$checked = is_object_in_term( $post_id, $taxonomy, $term_id ) ? ' checked="checked"' : '';
-		$type = in_array( $taxonomy, $single_taxonomies ) ? 'radio' : 'checkbox';
+		$type = in_array( $taxonomy, $this->single_taxonomies ) ? 'radio' : 'checkbox';
 		$html .= str_repeat( '—', count( get_ancestors( $term_id, $taxonomy ) ) );
 		$html .= ' <input type="' . $type . '" id="attachments[' . $post_id . '][' . $taxonomy . ']-' . $cnt . '" name="attachments[' . $post_id . '][' . $taxonomy . '][]" value="' . esc_attr( $term_id_arr[$term_id]->name ) . '"' . $checked . ' /><label for="attachments[' . $post_id . '][' . $taxonomy . ']-' . $cnt . '">' . esc_html( $term_id_arr[$term_id]->name ) . "</label><br />\n";
 		$cnt++;
@@ -716,13 +733,12 @@ function get_tax_columns() {
 	$_GET['post_type'] = $this->edit_post_type;
 	$_POST['post_type'] = $this->edit_post_type;
 	
-	$disp_taxonomies = get_option( $this->edit_post_type . '_list_taxonomies' );
 
 	$taxonomies = get_object_taxonomies( $this->edit_post_type, 'object' );
 	if ( ! empty( $taxonomies ) ) {
 		$this->add_tax_columns = array();
 		foreach ( $taxonomies as $tax_slug => $taxonomy ) {
-			if ( ! in_array( $tax_slug, array( 'category', 'post_tag' ) ) && $taxonomy->show_ui !== false && in_array( $tax_slug, $disp_taxonomies ) ) {
+			if ( ! in_array( $tax_slug, array( 'category', 'post_tag' ) ) && $taxonomy->show_ui !== false && in_array( $tax_slug, $this->disp_taxonomies[$this->edit_post_type] ) ) {
 				$this->add_tax_columns[$tax_slug] = $taxonomy;
 			}
 		}
@@ -807,11 +823,10 @@ function add_tax_column_settings() {
 
 function display_taxonomy_fields( $args ) {
 	$taxonomies = get_object_taxonomies( $args['post_type'], 'object' );
-	$disp_taxonomies = get_option( $args['post_type'] . '_list_taxonomies' );
 	if ( ! empty( $taxonomies ) ) {
 		foreach ( $taxonomies as $tax_slug => $taxonomy ) {
 			if ( ! in_array( $tax_slug, array( 'category', 'post_tag' ) ) && $taxonomy->show_ui !== false ) {
-				$checked = in_array( $tax_slug, $disp_taxonomies ) ? ' checked="checked"' : '';
+				$checked = in_array( $tax_slug, $this->disp_taxonomies[$args['post_type']] ) ? ' checked="checked"' : '';
 				echo '<label for="' . esc_attr( $args['post_type'] ) . '_list_taxonomies_' . esc_attr( $tax_slug ) . '"><input type="checkbox" id="' . esc_attr( $args['post_type'] ) . '_list_taxonomies_' . esc_attr( $tax_slug ) . '" name="' . esc_attr( $args['post_type'] ) . '_list_taxonomies[' . esc_attr( $tax_slug ) . ']" value="' . esc_attr( $tax_slug ) . '"' . $checked . ' /> ' . esc_html( $taxonomy->labels->name ) . '</label>';
 			}
 		}
@@ -830,6 +845,7 @@ function allow_list_display_tax_setting( $whitelist_options ) {
 					if ( ! isset( $_POST[$post_slug . '_list_taxonomies'] ) ) {
 						$_POST[$post_slug . '_list_taxonomies'] = array();
 					}
+					break;
 				}
 			}
 		}
@@ -840,10 +856,9 @@ function allow_list_display_tax_setting( $whitelist_options ) {
 
 function add_filter_tax_dropdown() {
 	$taxonomies = get_object_taxonomies( $this->edit_post_type, 'object' );
-	$disp_taxonomies = get_option( $this->edit_post_type . '_list_taxonomies' );
 	if ( ! empty( $taxonomies ) ) {
 		foreach ( $taxonomies as $tax_slug => $taxonomy ) {
-			if ( ! in_array( $tax_slug, array( 'category', 'post_tag' ) ) && $taxonomy->show_ui !== false && $taxonomy->hierarchical && in_array( $tax_slug, $disp_taxonomies ) ) {
+			if ( ! in_array( $tax_slug, array( 'category', 'post_tag' ) ) && $taxonomy->show_ui !== false && $taxonomy->hierarchical && in_array( $tax_slug, $this->disp_taxonomies[$this->edit_post_type] ) ) {
 				$dropdown_options = array(
 					'show_option_all' => sprintf( __( 'View all %s', 'ps-taxonomy-expander' ), $taxonomy->labels->name ),
 					'hide_empty' => 0,
