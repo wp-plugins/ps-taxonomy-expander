@@ -3,57 +3,62 @@ Contributors: jim912
 Tags: category, tag, taxonomy, custom taxonomy
 Requires at least: 3.0
 Tested up to: 3.2.1
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 
-�J�e�S���[�A�^�O�A�J�X�^�����ނ̎g����������コ���܂��B
+カテゴリー、タグ、カスタム分類の使い勝手を向上させます。
 
 == Description ==
-PS Taxonomy Expander�́A�J�e�S���[�E�^�O�A�����ăJ�X�^�����ނ̋L���ҏW���ɂ�����g����������コ���܂��B
+PS Taxonomy Expanderは、カテゴリー・タグ、そしてカスタム分類の記事編集時における使い勝手を向上させます。
 
 = Functions =
-1. �J�e�S���[�̂悤�ȊK�w�����ꂽ�^�N�\�m�~�[�̓o�^�����W�I�{�^���Ɛ؂�ւ��邱�Ƃ��ł��܂��B
-2. �T�|�[�g���铊�e�^�C�v���ɁA�f�t�H���g�̕��ނ�ݒ肷�邱�Ƃ��ł��܂��B
-3. ���f�B�A�̃J�X�^�����ރ��j���[��ǉ����܂��B
-4. �K�w�����ꂽ���f�B�A�̃^�N�\�m�~�[�o�^���@���`�F�b�N�{�b�N�X/���W�I�{�^���ɕύX���܂��B
-5. �v���t�B�[���ݒ�ɂāA�_�b�V���{�[�h�̌��݂̏󋵂ɃJ�X�^�����ނ�\���ǉ������邱�Ƃ��ł��܂��B
-6. �^�N�\�m�~�[���̏������w�肷�邱�Ƃ��ł��܂��B
+1. カテゴリーのような階層化されたタクソノミーの登録をラジオボタンと切り替えることができます。
+2. サポートする投稿タイプ毎に、デフォルトの分類を設定することができます。
+3. メディアのカスタム分類メニューを追加します。
+4. 階層化されたメディアのタクソノミー登録方法をチェックボックス/ラジオボタンに変更します。
+5. プロフィール設定にて、ダッシュボードの現在の状況にカスタム分類を表示追加させることができます。
+6. タクソノミー毎の順序を指定することができます。
+7. 記事一覧ページにて、カスタム分類の表示追加、カスタム分類での絞り込みをすることができます。
 
 = Usage =
-* ���e�ݒ�y�[�W�ɁA�f�t�H���g���ށA�o�^���@�̐ݒ肪�ǉ�����܂��B
-* �v���t�B�[���y�[�W�A���݂̏󋵂ւ̃^�N�\�m�~�[�\���ݒ肪�ǉ�����܂��B
-* �ݒ胁�j���[�ɁA"Term order"���j���[���ǉ�����܂��B
+* 投稿設定ページに、デフォルト分類、登録方法の設定が追加されます。
+* プロフィールページ、現在の状況へのタクソノミー表示設定が追加されます。
+* 設定メニューに、"Term order"メニューが追加されます。
+* 投稿設定ページに、カスタム分類の記事一覧への表示設定が追加されます。
 
 == Installation ==
 
-1. Upload the PS Taxonomy Expander folder to the plugins directory in your WordPress installation
-2. Go to plugins list and activate "PS Taxonomy Expander". 
-
+1. pluginsフォルダに、ダウンロードした PS Taxonomy Expander のフォルダをアップロードしてください。
+2. プラグインページで "PS Taxonomy Expander" を有効化して下さい。
+3. 投稿設定で分類の登録方法、初期分類、一覧表示への追加の設定ができます。Term orderメニューでは、順序指定が可能です。
 
 == Changelog ==
+= 1.1.2 =
+* 記事一覧にカスタム分類の表示、絞り込み機能を追加。
 = 1.1.1 =
-* Term order���j���[��Ɨ���
+* Term orderメニューを独立化
 = 1.1.0 =
-* �^�N�\�m�~�[�̏����w��@�\��ǉ�
+* 分類の順序指定機能を追加
 = 1.0.1 =
-* �o�O�t�B�b�N�X
+* バグフィックス
 = 1.0.0 =
-* ���f�B�A�^�N�\�m�~�[���M�������[�ŕҏW�E�ۑ��ł��Ȃ������C��
+* メディア分類がギャラリーで編集・保存できない問題を修正
 
 = 1.0.0 =
-* Notice, Warning�G���[�̏C��
-* �P���`�E�����`�\���̏C��
-* ���݂̏󋵂ւ̃J�X�^�����ޕ\���@�\�ǉ�
-* ���[�J���C�Y�Ή�
+* Notice, Warningエラーの修正
+* 単数形・複数形表示の修正
+* 現在の状況へのカスタム分類表示機能追加
+* ローカライズ対応
 
 = 0.8.0 =
 * Public release
 
 == Screenshots ==
-1. �K�w���^�N�\�m�~�[�̃��W�I�{�^���o�^
-2. �f�t�H���g���ސݒ�
-3. ���f�B�A�̃^�N�\�m�~�[�̃��j���[�\���Ɠo�^���@
-4. ���݂̏󋵂ɃJ�X�^�����ނ̕\��
-5. �^�N�\�m�~�[�����̐ݒ���
+1. 階層化分類のラジオボタン登録
+2. デフォルト分類設定とカスタム分類の一覧表示設定
+3. メディア分類のメニュー表示と登録方法
+4. 現在の状況にカスタム分類の表示
+5. Term orderの設定画面
+6. 記事一覧へのカスタム分類
 
 == Links ==
 "[PS Auto Sitemap](http://wordpress.org/extend/plugins/ps-auto-sitemap/ "WordPress sitemap plugin")" is a plugin automatically generates a site map page from your WordPress site. 

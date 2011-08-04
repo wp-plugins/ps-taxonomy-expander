@@ -3,7 +3,7 @@ Contributors: jim912
 Tags: category, tag, taxonomy, custom taxonomy
 Requires at least: 3.0
 Tested up to: 3.2.1
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 
 Makes categories, tags and custom taxonomies more useful.
 
@@ -16,19 +16,25 @@ PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on
 3. Add custom taxonomies menu on Media.
 4. Enable to select check box / radio button to register taxonomies of media with hierarchy.
 5. Enable to display custom taxonomies on Right Now in the Dashboard, if you check the box on Your Profile.
-5. Enable to set term order on ""
+6. Enable to specify order of every taxonomy. 
+7. Enable to display custom taxonomies and narrow posts down by custom taxonomies on posts and pages list.
 
 = Usage =
 * You can find settings of default taxonomy and taxonomy selection on Writing Settings.
 * You can find setting of displaying taxonomies on Right Now in Your Profile.
+* You can find "Term order" menu on Settings screen.
+* You can find settings of displaying custom taxonomies on posts and pages list. 
 
 == Installation ==
 
 1. Upload the PS Taxonomy Expander folder to the plugins directory in your WordPress installation
 2. Go to plugins list and activate "PS Taxonomy Expander". 
-
+3. You can specify taxonomy selection, default taxonomy and display taxonomies on All posts. You can specify order of taxonomies on Term order menu.
 
 == Changelog ==
+= 1.1.2 =
+* Added the function to display custome taxonomies on All posts and narrow them down.
+
 = 1.1.1 =
 * Term order menu become independent from Options sub menu.
 
@@ -49,10 +55,11 @@ PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on
 
 == Screenshots ==
 1. Registering taxonomies with hierachy on radio button.
-2. Setting of default taxonomies.
+2. 
 3. Custom taxonomies menu and registration on Media.
 4. Displaying custom taxonomies on Right Now.
-5. Setting of term order.
+5. Setting screen of term order.
+6. Custom taxonomies on posts and pages list.
 
 == Links ==
 "[PS Auto Sitemap](http://wordpress.org/extend/plugins/ps-auto-sitemap/ "WordPress sitemap plugin")" is a plugin automatically generates a site map page from your WordPress site. 
