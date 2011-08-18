@@ -4,7 +4,7 @@
  Plugin URI: http://www.warna.info/archives/451/
  Description: PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on editing posts.
  Author: Hitoshi Omagari
- Version: 1.1.3
+ Version: 1.1.4
  License: GPLv2 or later
  Text Domain: ps-taxonomy-expander
  Domain Path: /language/
@@ -780,11 +780,11 @@ function display_taxonomy_column( $column_name, $post_id ) {
 				$term_links[] = '<a href="' . esc_url( $url ) . '">' . esc_html( $term->name ) . '</a>';
 			}
 		}
-	}
-	if ( empty( $term_links ) ) {
-		echo esc_html( sprintf( __( 'No %s', 'ps-taxonomy-expander' ), $this->add_tax_columns[$column_name]->labels->name ) );
-	} else {
-		echo implode( ', ', $term_links );
+		if ( empty( $term_links ) ) {
+			echo esc_html( sprintf( __( 'No %s', 'ps-taxonomy-expander' ), $this->add_tax_columns[$column_name]->labels->name ) );
+		} else {
+			echo implode( ', ', $term_links );
+		}
 	}
 }
 
