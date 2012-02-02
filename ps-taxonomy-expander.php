@@ -4,7 +4,7 @@
  Plugin URI: http://www.warna.info/archives/451/
  Description: PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on editing posts.
  Author: Hitoshi Omagari
- Version: 1.1.4
+ Version: 1.1.5
  License: GPLv2 or later
  Text Domain: ps-taxonomy-expander
  Domain Path: /language/
@@ -12,6 +12,7 @@
 
 
 class PS_Taxonomy_Expander {
+	var $version = '1.1.5';
 	var $single_taxonomies;
 	var $edit_post_type;
 	var $disp_taxonomies;
@@ -143,12 +144,22 @@ EOF;
 
 
 function remove_inline_edit_post_js() {
+	global $wp_version;
 	wp_deregister_script( 'inline-edit-post' );
+	if ( version_compare( $wp_version, '3.3.x', '>=' ) ) {
+		wp_enqueue_script( 'suggest' );
+	}
 }
 
 
 function add_sc_inline_edit_js() {
-	wp_enqueue_script( 'sc-inline-edit', WP_PLUGIN_URL . '/' . plugin_basename( dirname( __FILE__ ) ) .'/js/ps-inline-edit.js', array(), false, true );
+	global $wp_version;
+	if ( version_compare( $wp_version, '3.1.x', '<' ) ) {
+		$file = 'ps-inline-edit.3.0.js';
+	} else {
+		$file = 'ps-inline-edit.3.1.js';
+	}
+	wp_enqueue_script( 'sc-inline-edit', WP_PLUGIN_URL . '/' . plugin_basename( dirname( __FILE__ ) ) .'/js/' . $file, array(), $this->version, true );
 }
 
 
