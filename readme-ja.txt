@@ -2,8 +2,8 @@
 Contributors: jim912
 Tags: category, tag, taxonomy, custom taxonomy
 Requires at least: 3.0
-Tested up to: 3.3.1
-Stable tag: 1.1.6
+Tested up to: 3.4
+Stable tag: 1.1.7
 
 カテゴリー、タグ、カスタム分類の使い勝手を向上させます。
 
@@ -32,6 +32,8 @@ PS Taxonomy Expanderは、カテゴリー・タグ、そしてカスタム分類
 3. 投稿設定で分類の登録方法、初期分類、一覧表示への追加の設定ができます。Term orderメニューでは、順序指定が可能です。
 
 == Changelog ==
+= 1.1.7 =
+* WordPress 3.4 対応
 = 1.1.6 =
 * 投稿一覧画面でNoticeエラーが発生する問題を修正（wp_deregister_scriptからwp_dequeue_scriptに変更。3.0対応として、wp_dequeue_scriptのコピーを同梱）
 = 1.1.5 =

@@ -4,7 +4,7 @@
  Plugin URI: http://www.warna.info/archives/451/
  Description: PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on editing posts.
  Author: Hitoshi Omagari
- Version: 1.1.6
+ Version: 1.1.7
  License: GPLv2 or later
  Text Domain: ps-taxonomy-expander
  Domain Path: /language/
@@ -12,7 +12,7 @@
 
 
 class PS_Taxonomy_Expander {
-	var $version = '1.1.6';
+	var $version = '1.1.7';
 	var $single_taxonomies;
 	var $edit_post_type;
 	var $disp_taxonomies;
@@ -156,10 +156,24 @@ function add_sc_inline_edit_js() {
 	global $wp_version;
 	if ( version_compare( $wp_version, '3.1.x', '<' ) ) {
 		$file = 'ps-inline-edit.3.0.js';
-	} else {
+	} elseif ( version_compare( $wp_version, '3.4.x', '<' ) ) {
 		$file = 'ps-inline-edit.3.1.js';
+	} else {
+		$file = 'ps-inline-edit.3.4.js';
 	}
 	wp_enqueue_script( 'sc-inline-edit', WP_PLUGIN_URL . '/' . plugin_basename( dirname( __FILE__ ) ) .'/js/' . $file, array(), $this->version, true );
+	if ( version_compare( $wp_version, '3.4.x', '>=' ) ) {
+		wp_localize_script(
+			'sc-inline-edit',
+			'inlineEditL10n',
+			array(
+				'error' => __('Error while saving the changes.'),
+				'ntdeltitle' => __('Remove From Bulk Edit'),
+				'notitle' => __('(no title)'),
+				'comma' => _x( ',', 'tag delimiter' ),
+			)
+		);
+	}
 }
 
 
@@ -403,7 +417,7 @@ function replace_attachement_taxonomy_input_to_check( $form_fields, $post ) {
 }
 
 
-function walker_media_taxonomy_html( $post_id, $taxonomy,  $term_id_arr, $taxonomy_tree, $html = '', $cnt = 0 ) {
+function walker_media_taxonomy_html( $post_id, $taxonomy,  $term_id_arr, $taxonomy_tree, $html = '', &$cnt = 0 ) {
 	foreach ( $taxonomy_tree as $term_id => $arr ) {
 		$checked = is_object_in_term( $post_id, $taxonomy, $term_id ) ? ' checked="checked"' : '';
 		$type = in_array( $taxonomy, $this->single_taxonomies ) ? 'radio' : 'checkbox';
@@ -411,7 +425,7 @@ function walker_media_taxonomy_html( $post_id, $taxonomy,  $term_id_arr, $taxono
 		$html .= ' <input type="' . $type . '" id="attachments[' . $post_id . '][' . $taxonomy . ']-' . $cnt . '" name="attachments[' . $post_id . '][' . $taxonomy . '][]" value="' . esc_attr( $term_id_arr[$term_id]->name ) . '"' . $checked . ' /><label for="attachments[' . $post_id . '][' . $taxonomy . ']-' . $cnt . '">' . esc_html( $term_id_arr[$term_id]->name ) . "</label><br />\n";
 		$cnt++;
 		if ( count( $arr ) ) {
-			$html = $this->walker_media_taxonomy_html( $post_id, $taxonomy, $term_id_arr, $arr, $html, &$cnt );
+			$html = $this->walker_media_taxonomy_html( $post_id, $taxonomy, $term_id_arr, $arr, $html, $cnt );
 		}
 	}
 	return $html;
