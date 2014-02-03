@@ -4,7 +4,7 @@
  Plugin URI: http://www.warna.info/archives/451/
  Description: PS Taxonomy Expander makes easy to use categories, tags and custom taxonomies on editing posts.
  Author: Hitoshi Omagari
- Version: 1.1.8
+ Version: 1.1.9
  License: GPLv2 or later
  Text Domain: ps-taxonomy-expander
  Domain Path: /language/
@@ -12,7 +12,7 @@
 
 
 class PS_Taxonomy_Expander {
-	var $version = '1.1.8';
+	var $version = '1.1.9';
 	var $single_taxonomies;
 	var $edit_post_type;
 	var $disp_taxonomies;
@@ -755,10 +755,6 @@ function get_tax_columns() {
 		wp_die( __('Invalid post type') );
 	}
 
-	$_GET['post_type'] = $this->edit_post_type;
-	$_POST['post_type'] = $this->edit_post_type;
-	
-
 	$taxonomies = get_object_taxonomies( $this->edit_post_type, 'object' );
 	if ( ! empty( $taxonomies ) ) {
 		$this->add_tax_columns = array();
@@ -1001,7 +997,7 @@ function walk_taxonomy_dropdown_tree() {
 $ps_taxonomy_expander = new PS_Taxonomy_Expander();
 
 class PS_TaxonomyDropdown extends Walker_CategoryDropdown {
-	function start_el( &$output, $term, $depth, $args ) {
+	function start_el( &$output, $term, $depth = 0, $args = array(), $current_object_id = 0 ) {
 		$pad = str_repeat('&nbsp;', $depth * 3);
 
 		$term_name = apply_filters( 'list_cats', $term->name, $term );
